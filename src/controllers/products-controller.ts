@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import csvtojson from "csvtojson";
+import productService from "../services/products-service";
 
 export async function validatePrices(req: Request, res: Response) {
   if (!req.file) {
@@ -10,8 +11,10 @@ export async function validatePrices(req: Request, res: Response) {
     const csvData = req.file.buffer.toString();
     const csvJson = await csvtojson().fromString(csvData);
 
-    res.status(200).send(csvJson);
+    const result = await productService.updateProductPrices(csvJson);
+
+    res.status(200).send(result);
   } catch (error) {
-    console.error("Erro ao converter CSV para JSON:", error);
+    console.error("Erro ao validar CSV", error);
   }
 }
