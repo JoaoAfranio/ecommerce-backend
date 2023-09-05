@@ -1,4 +1,3 @@
-import { Products } from "@prisma/client";
 import { prisma } from "../config";
 
 async function findProductByCode(code: number) {
