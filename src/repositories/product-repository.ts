@@ -11,8 +11,20 @@ async function findProductByCode(code: number) {
   });
 }
 
+async function updateProductPrice(code: number, sales_price: number) {
+  return prisma.products.update({
+    where: {
+      code,
+    },
+    data: {
+      sales_price,
+    },
+  });
+}
+
 const productRepository = {
   findProductByCode,
+  updateProductPrice,
 };
 
 export default productRepository;
