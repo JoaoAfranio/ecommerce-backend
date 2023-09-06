@@ -1,7 +1,7 @@
 import { Packs } from "@prisma/client";
 import productRepository from "../repositories/product-repository";
 
-async function updateProductPrices(listUpdateProducts: UpdateProductPriceParams[]) {
+async function validateProductPrices(listUpdateProducts: UpdateProductPriceParams[]) {
   const res = await validateProductList(listUpdateProducts);
 
   return res;
@@ -17,15 +17,19 @@ async function validateProductList(listUpdateProducts: UpdateProductPriceParams[
       pack_products_adjustment: true,
     };
 
+    let has_error = false;
+
     const prod = await productExists(product);
     if (!prod) {
-      return { ...product, error_validations };
+      has_error = true;
+      return { ...product, error_validations, has_error };
     }
     error_validations.products_exists = false;
 
     const priceValidation = await priceNumberIsValid(Number(product.new_price));
     if (!priceValidation) {
-      return { prod, error_validations };
+      has_error = true;
+      return { prod, error_validations, has_error };
     }
     error_validations.price_correct_format = false;
 
@@ -47,12 +51,15 @@ async function validateProductList(listUpdateProducts: UpdateProductPriceParams[
       error_validations.pack_products_adjustment = false;
     }
 
+    has_error = hasErrorTrue(error_validations);
+
     return {
       code: Number(prod.code),
       name: prod.name,
       cost_price: Number(prod.cost_price),
       sales_price: Number(prod.sales_price),
       new_price: Number(product.new_price),
+      has_error,
       error_validations,
     };
   });
@@ -110,6 +117,17 @@ async function validatePackPrice(packs: Packs[], listUpdateProducts: UpdateProdu
   return true;
 }
 
+function hasErrorTrue(errors: ErrorValidations) {
+  const values = Object.values(errors);
+  const hasTrueAttribute = values.includes(true);
+  return hasTrueAttribute;
+}
+
+async function updateProductPrices(listUpdateProducts: UpdateProductPriceParams[]) {
+  const res = await listUpdateProducts.map((product) => productRepository.updateProductPrice(Number(product.product_code), Number(product.new_price)));
+  return res;
+}
+
 type UpdateProductPriceParams = {
   product_code: string;
   new_price: string;
@@ -124,6 +142,7 @@ type ErrorValidations = {
 };
 
 const productService = {
+  validateProductPrices,
   updateProductPrices,
 };
 

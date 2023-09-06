@@ -11,6 +11,23 @@ export async function validatePrices(req: Request, res: Response) {
     const csvData = req.file.buffer.toString();
     const csvJson = await csvtojson().fromString(csvData);
 
+    const result = await productService.validateProductPrices(csvJson);
+
+    res.status(200).send(result);
+  } catch (error) {
+    console.error("Erro ao validar CSV", error);
+  }
+}
+
+export async function updatePrices(req: Request, res: Response) {
+  if (!req.file) {
+    return res.status(400).send("Nenhum arquivo CSV foi enviado.");
+  }
+
+  try {
+    const csvData = req.file.buffer.toString();
+    const csvJson = await csvtojson().fromString(csvData);
+
     const result = await productService.updateProductPrices(csvJson);
 
     res.status(200).send(result);
